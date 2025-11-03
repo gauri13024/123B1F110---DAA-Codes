@@ -1,0 +1,83 @@
+#include<iostream>
+#include<vector>
+#include<string>
+#include<ctime>
+#include<cstdlib>
+#include<iomanip>
+using namespace std;
+struct Order{
+string order_id;
+time_t timestamp;
+};
+void generate_sample_orders(vector<Order>& orders, int n){
+tm base_time ={};
+base_time.tm_year=2025-1900;
+base_time.tm_mon=5;
+base_time.tm_mday=24;
+base_time.tm_hour=12;
+time_t base = mktime(&base_time);
+for(int i=0;i<n;i++){
+int random_minute = rand()%1000000;
+Order o;
+o.timestamp= base+ random_minute *60;
+
+o.order_id = "ORD" +to_string(i+1);
+orders.push_back(o) ;
+}
+}
+void merge(vector<Order> &orders,int start,int mid,int end){
+vector<Order> temp(end-start+1);
+int left = start, right = mid+1,index=0;
+while(left<=mid && right<=end){
+if(orders[left].timestamp<=orders[right].timestamp){
+temp[index]=orders[left];
+left++,index++;
+}
+else{
+temp[index]=orders[right];
+right++,index++;
+}
+}
+while(left<=mid){
+temp[index]=orders[left];
+left++,index++;
+}
+while(right<=end){
+temp[index]=orders[right];
+right++,index++;
+}
+index =0;
+while(start<=end){
+orders[start]=temp[index];
+start++,index++;
+}
+}
+void mergesort (vector<Order> &orders,int start,int end){
+
+if(start == end) return;
+int mid =start +(end-start)/2;
+mergesort(orders,start,mid);
+mergesort(orders,mid+1,end);
+merge(orders,start,mid,end);
+}
+void print_orders(const vector<Order> &orders ){
+for(auto &o : orders){
+tm * tm_info =gmtime(&o.timestamp);
+cout<<"order id :" <<o.order_id
+<<"timestamp:"<<put_time(tm_info,"%Y-%m-%dT%H:%M:%SZ") <<"\n";
+}
+}
+int main(){
+srand(time(0));
+int num_orders=100000;
+vector<Order> orders;
+orders.reserve(num_orders);
+generate_sample_orders(orders,num_orders);
+clock_t start = clock();
+mergesort(orders,0,num_orders-1);
+clock_t end=clock();
+double time_taken= double(end-start)/ CLOCKS_PER_SEC;
+cout<<"sorted"<<num_orders<<"orders_in"<<time_taken<<"sec"<<"\n";
+print_orders(orders);
+return 0;
+}
