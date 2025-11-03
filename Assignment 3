@@ -1,0 +1,105 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <string>
+#include <utility>
+#include <cmath>
+using namespace std;
+struct Item {
+string name;
+double weight;
+double value;
+bool divisible;
+int priority;
+Item(string n, double w, double v, bool d, int p)
+: name(n), weight(w), value(v), divisible(d), priority(p) {}
+double valuePerWeight() const {
+if (weight <= 0.0) return 0.0;
+return value / weight;
+}
+};
+
+bool compareItems(const Item &a, const Item &b) {
+if (a.priority == b.priority) {
+return a.valuePerWeight() > b.valuePerWeight();
+}
+return a.priority < b.priority;
+}
+pair<double, double> knapsack(vector<Item> &items, double capacity) {
+sort(items.begin(), items.end(), compareItems);
+cout << left << setw(20) << "Item"
+<< setw(10) << "Weight"
+<< setw(12) << "Value"
+<< setw(10) << "Priority"
+<< setw(15) << "Val/Weight"
+<< setw(15) << "Type" << '\n';
+cout << string(82, '-') << '\n';
+for (const auto &item : items) {
+cout << left << setw(20) << item.name
+<< setw(10) << item.weight
+<< setw(12) << item.value
+<< setw(10) << item.priority
+<< setw(15) << fixed << setprecision(2) << item.valuePerWeight()
+<< setw(15) << (item.divisible ? "divisible" : "indivisible") << '\n';
+}
+cout << "\nSelecting items to maximize value given capacity = " << capacity << "\n\n";
+double totalValue = 0.0;
+double totalWeight = 0.0;
+double remaining = capacity;
+for (const auto &item : items) {
+if (remaining <= 0.0) break;
+if (item.divisible) {
+// take as much as possible of this item
+double takenWeight = min(item.weight, remaining);
+
+double takenValue = item.valuePerWeight() * takenWeight;
+totalValue += takenValue;
+totalWeight += takenWeight;
+remaining -= takenWeight;
+cout << "- " << item.name << ": taken weight = " << fixed << setprecision(2) << takenWeight
+<< ", priority = " << item.priority
+<< ", type = divisible"
+<< ", value gained = " << setprecision(2) << takenValue << '\n';
+} else {
+if (item.weight <= remaining + 1e-9) {
+totalValue += item.value;
+totalWeight += item.weight;
+remaining -= item.weight;
+cout << "- " << item.name << ": taken weight = " << fixed << setprecision(2) <<
+item.weight
+<< ", priority = " << item.priority
+<< ", type = indivisible"
+<< ", value gained = " << setprecision(2) << item.value << '\n';
+} else {
+cout << "- " << item.name << ": skipped (indivisible, doesn't fit remaining capacity = "
+<< fixed << setprecision(2) << remaining << ")\n";
+}
+}
+}
+cout << "\nFinal: total weight carried = " << fixed << setprecision(2) << totalWeight
+<< " / " << capacity << ", total value = " << fixed << setprecision(2) << totalValue << "\n";
+return { totalValue, totalWeight };
+}
+int main() {
+vector<Item> items = {
+Item("Gold", 10.0, 600.0, false, 1),
+Item("Silver", 20.0, 400.0, false, 2),
+Item("Bronze", 15.0, 150.0, true, 2),
+
+Item("FoodPack", 30.0, 270.0, true, 1),
+Item("Laptop", 5.0, 800.0, false, 1),
+Item("BookSet", 8.0, 120.0, false, 3),
+Item("Water", 25.0, 100.0, true, 3)
+};
+double capacity;
+cout << "Enter knapsack capacity: ";
+if (!(cin >> capacity) || capacity <= 0.0) {
+cout << "Invalid capacity. Using default capacity = 50.0\n";
+capacity = 50.0;
+}
+auto result = knapsack(items, capacity);
+double totalValue = result.first;
+double totalWeight = result.second;
+return 0;
+}
