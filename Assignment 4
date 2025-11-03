@@ -1,0 +1,71 @@
+#include <iostream>
+#include <vector>
+#include <climits>
+#include <queue>
+using namespace std;
+void dijkstra(int source, vector<vector<pair<int,int>>> &graph, vector<int> &dist) {
+int V = graph.size();
+dist.assign(V, INT_MAX);
+dist[source] = 0;
+priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>> pq;
+pq.push({0, source});
+while (!pq.empty()) {
+int u = pq.top().second;
+int d = pq.top().first;
+pq.pop();
+if (d > dist[u]) continue;
+for (auto &edge : graph[u]) {
+int v = edge.first;
+int w = edge.second;
+if (dist[v] > dist[u] + w) {
+dist[v] = dist[u] + w;
+pq.push({dist[v], v});
+}
+}
+}
+}
+
+int main() {
+int V, E;
+cout << "Enter the number of vertices: ";
+cin >> V;
+cout << "Enter the number of edges: ";
+cin >> E;
+vector<vector<pair<int,int>>> graph(V);
+cout << "Enter the edges (u v w) (0-based indexing):\n";
+for (int i = 0; i < E; i++) {
+int u, v, w;
+cin >> u >> v >> w;
+graph[u].push_back({v, w});
+graph[v].push_back({u, w});
+}
+int source;
+cout << "Enter the ambulance location (node): ";
+cin >> source;
+int H;
+cout << "Enter the number of hospitals: ";
+cin >> H;
+vector<int> hospitals(H);
+cout << "Enter the hospital nodes:\n";
+for (int i = 0; i < H; i++) {
+cin >> hospitals[i];
+}
+vector<int> dist;
+dijkstra(source, graph, dist);
+int min_time = INT_MAX;
+int nearest_hospital = -1;
+for (int h : hospitals) {
+if (dist[h] < min_time) {
+
+min_time = dist[h];
+nearest_hospital = h;
+}
+}
+if (nearest_hospital == -1 || min_time == INT_MAX) {
+cout << "No hospital is reachable from the ambulance location.\n";
+} else {
+cout << "Nearest hospital is at node " << nearest_hospital
+<< " with travel time " << min_time << " units.\n";
+}
+return 0;
+}
